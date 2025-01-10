@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mormordagnysbageri-del1-api", "mormordagnysbageri-del1-api.csproj", "{8DA640D7-812F-2036-1D39-F943072CD307}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8DA640D7-812F-2036-1D39-F943072CD307}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DA640D7-812F-2036-1D39-F943072CD307}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DA640D7-812F-2036-1D39-F943072CD307}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DA640D7-812F-2036-1D39-F943072CD307}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3C6074C3-983A-44A3-B994-53A3AC9D1B9C}
+	EndGlobalSection
+EndGlobal
