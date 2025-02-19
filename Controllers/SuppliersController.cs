@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Razor.Runtime.TagHelpers;
 using Microsoft.EntityFrameworkCore;
 using mormordagnysbageri_del1_api.Data;
 using mormordagnysbageri_del1_api.Entities;
@@ -15,17 +14,17 @@ public class SuppliersController(DataContext context) : ControllerBase
     [HttpGet()]
     public async Task<ActionResult> ListAllSuppliers(){
         var suppliers = await _context.Suppliers
-        .Include(sp => sp.SupplierProducts) 
+        .Include(sp => sp.SupplierIngredients) 
         .Select(supplier => new {
-            supplier.SupplierName,
+            supplier.Name,
             supplier.ContactPerson,
             supplier.Email,
             supplier.Phone,
-            Products = supplier.SupplierProducts
-                .Select(supplierProduct => new {
-                supplierProduct.Product.ProductName,
-                supplierProduct.ItemNumber,
-                supplierProduct.Price
+            Ingredients = supplier.SupplierIngredients
+                .Select(SupplierIngredient => new {
+                SupplierIngredient.Ingredient.Name,
+                SupplierIngredient.ItemNumber,
+                SupplierIngredient.Price
             })
         })
         .ToListAsync();
@@ -36,18 +35,18 @@ public class SuppliersController(DataContext context) : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult> FindSupplier (int id){
         var supplier = await _context.Suppliers
-        .Where(s => s.SupplierId == id)
-        .Include(sp => sp.SupplierProducts) 
+        .Where(s => s.Id == id)
+        .Include(sp => sp.SupplierIngredients) 
         .Select(supplier => new {
-            supplier.SupplierName,
+            supplier.Name,
             supplier.ContactPerson,
             supplier.Email,
             supplier.Phone,
-            Products = supplier.SupplierProducts
-                .Select(supplierProduct => new {
-                supplierProduct.Product.ProductName,
-                supplierProduct.ItemNumber,
-                supplierProduct.Price
+            Ingredients = supplier.SupplierIngredients
+                .Select(SupplierIngredient => new {
+                SupplierIngredient.Ingredient.Name,
+                SupplierIngredient.ItemNumber,
+                SupplierIngredient.Price
             })
         })
         .SingleOrDefaultAsync();

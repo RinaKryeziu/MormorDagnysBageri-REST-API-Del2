@@ -1,134 +1,104 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using mormordagnysbageri_del1_api.Data;
-using mormordagnysbageri_del1_api.Entities;
-using mormordagnysbageri_del1_api.ViewModels;
-
+using mormordagnysbageri_del1_api.Interfaces;
+using mormordagnysbageri_del1_api.ViewModels.Product;
 
 namespace mormordagnysbageri_del1_api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-
-public class ProductsController(DataContext context) : ControllerBase
+public class ProductsController(IUnitOfWork unitOfWork) : ControllerBase
 {
-    private readonly DataContext _context = context;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
-    [HttpGet()]
-    public async Task<ActionResult> ListAllProducts()
+    [HttpPost()]
+    public async Task<IActionResult> AddProduct(ProductViewModel model)
     {
-        var products = await _context.Products
-            .Include(p => p.SupplierProducts)
-            .Select(product => new
+        try
+        {
+            if (await _unitOfWork.ProductRepository.Add(model))
             {
-                product.ProductName,
-                SupplierProducts = product.SupplierProducts
-                    .Select(supplierProduct => new
-                    {
-                        supplierProduct.ItemNumber,
-                        supplierProduct.Price,
-                        supplierProduct.Supplier.SupplierName
-                    })
-            })
-            .ToListAsync();
-        return Ok(new { success = true, StatusCode = 200, data = products });
+                if (await _unitOfWork.Complete())
+                {
+                    return StatusCode(201);
+                }
+                else
+                {
+                    return StatusCode(500);
+                }
+            }
+            else
+            {
+                return BadRequest();
+            }
+        }
+        catch (System.Exception)
+        {
+
+            throw;
+        }
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult> FindProduct(int id)
+    public async Task<IActionResult> FindProduct(int id)
     {
-        var product = await _context.Products
-            .Where(p => p.ProductId == id)
-            .Include(x => x.SupplierProducts)
-            .Select(product => new
-            {
-                product.ProductName,
-                SupplierProduct = product.SupplierProducts
-                    .Select(supplierProduct => new
-                    {
-                        supplierProduct.ItemNumber,
-                        supplierProduct.Price,
-                        supplierProduct.Supplier.SupplierName
-                    })
-            })
-            .SingleOrDefaultAsync();
-
-        if (product is null)
-        {
-            return NotFound(new { success = false, StatusCode = 404, message = $"Tyvärr, vi kunde inte hitta någon produkt med artikelnummer: {id}" });
-        }
-        return Ok(new { success = true, StatusCode = 200, data = product });
-    }
-
-    [HttpPost()]
-    public async Task<ActionResult> AddProduct(ProductPostViewModel model)
-    {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.ItemNumber == model.ItemNumber);
-        var supplier = await _context.Suppliers.FirstOrDefaultAsync(s => s.SupplierId == model.SupplierId);
-
-        if (product is not null || supplier is null)
-        {
-            return BadRequest(new { success = false, message = $"Tyvärr, det gick inte att lägga till produkten: {0}", model.ProductName });
-        }
-
-        var newProduct = new Product
-        {
-            ItemNumber = model.ItemNumber,
-            ProductName = model.ProductName,
-            Price = model.Price,
-        };
-
         try
         {
-            await _context.Products.AddAsync(newProduct);
-            await _context.SaveChangesAsync();
-
-            var supplierProduct = new SupplierProduct
-            {
-                SupplierId = model.SupplierId,
-                ProductId = newProduct.ProductId,
-                ItemNumber = model.ItemNumber,
-                Price = model.Price
-            };
-
-            await _context.SupplierProducts.AddAsync(supplierProduct);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { success = true, message = $"Produkten {model.ProductName} har lagts till hos leverantören {supplier.SupplierName}." });
+            var product = await _unitOfWork.ProductRepository.Find(id);
+            return Ok(new { success = true, StatusCode = 200, data = await _unitOfWork.ProductRepository.Find(id) });
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ex.Message);
+
+            return NotFound(new { success = false, message = ex.Message });
         }
     }
 
-    [HttpPatch("{id}")]
-    public async Task<ActionResult> UpdateProductPrice(int id, [FromQuery] decimal price, [FromQuery] int supplierId)
+    [HttpGet()]
+    public async Task<IActionResult> ListAllProducts()
     {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.ProductId == id);
-        var supplierProduct = await _context.SupplierProducts.FirstOrDefaultAsync(sp => sp.SupplierId == supplierId);
-
-        if (product is null || supplierProduct is null )
-        {
-            return BadRequest(new { success = false, message = $"Tyvärr, det gick inte att uppdatera priset på produkten med id {id}" });
-        }
-
-        supplierProduct.Price = price;
-
         try
         {
-            await _context.SaveChangesAsync();
+            return Ok(new { success = true, StatusCode = 200, data = await _unitOfWork.ProductRepository.List() });
+
         }
         catch (Exception ex)
         {
-            return StatusCode(500, ex.Message);
-        }
 
-        return NoContent();  
+            return NotFound($"Tyvärr hittade vi inget {ex.Message}");
+        }
     }
 
-
-
-
+    [HttpPatch("{id}/price")]
+    public async Task<IActionResult> UpdateProductPrice(int id, ProductViewModel model)
+    {
+        try
+        {
+            if (await _unitOfWork.ProductRepository.Update(id, model))
+            {
+                if (_unitOfWork.HasChanges())
+                {
+                    await _unitOfWork.Complete();
+                    return NoContent();
+                }
+                else
+                {
+                    return StatusCode(500);
+                }
+            }
+            else
+            {
+                return StatusCode(500);
+            }
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
 }
