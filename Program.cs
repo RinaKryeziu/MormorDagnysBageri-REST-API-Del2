@@ -13,6 +13,8 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 //Dependency injection
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -23,12 +25,15 @@ var app = builder.Build();
 
 using var scope = app.Services.CreateScope();
 
-var Services = scope.ServiceProvider;
 
 try
 {
+    var Services = scope.ServiceProvider;
+
     var context = Services.GetRequiredService<DataContext>();
+
     await context.Database.MigrateAsync();
+    
     await Seed.LoadAddressTypes(context);
     await Seed.LoadPostalAddresses(context);
     await Seed.LoadAddresses(context);

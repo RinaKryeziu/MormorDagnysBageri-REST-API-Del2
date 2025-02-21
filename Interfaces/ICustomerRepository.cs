@@ -8,4 +8,6 @@ public interface ICustomerRepository
     public Task<bool> Add(CustomerPostViewModel model);
     public Task<CustomerViewModel> Find(int id);
     public Task<IList<CustomersViewModel>> List();
+    public Task<bool> Update(int id, CustomerBaseViewModel model);
+
 }

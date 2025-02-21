@@ -1,9 +1,10 @@
-using System.Xml.Serialization;
 using Microsoft.EntityFrameworkCore;
 using mormordagnysbageri_del1_api.Data;
 using mormordagnysbageri_del1_api.Entities;
 using mormordagnysbageri_del1_api.Interfaces;
+using mormordagnysbageri_del1_api.ViewModels;
 using mormordagnysbageri_del1_api.ViewModels.Product;
+using mormordagnysbageri_del1_api.ViewModels.SalesOrder;
 
 namespace mormordagnysbageri_del1_api.Repositories;
 
@@ -47,12 +48,16 @@ public class ProductRepository(DataContext context) : IProductRepository
         {
             var product = await _context.Products
             .Where(c => c.Id == id)
+            .Include(c => c.OrderItems)
+                .ThenInclude(c => c.Order)
+                    .ThenInclude(c => c.Customer)
             .SingleOrDefaultAsync();
 
             if (product is null)
             {
                 throw new MDBException($"Finns ingen produkt med id {id}");
             }
+
 
             var view = new ProductViewModel
             {
@@ -65,6 +70,29 @@ public class ProductRepository(DataContext context) : IProductRepository
                 ExpireDate = product.ExpireDate,
                 ManufactureDate = product.ManufactureDate
             };
+
+            IList<CustomersViewModel> customers = [];
+
+            foreach (var orderItem in product.OrderItems)
+            {
+                var customer = orderItem.Order.Customer;
+
+                var exists = customers.FirstOrDefault(c => c.Id == customer.Id);
+                if(exists is null)
+                {
+                    var customerView = new CustomersViewModel
+                    {
+                        Id = customer.Id,
+                        Name = customer.Name,
+                        Email = customer.Email,
+                        Phone = customer.Phone,
+                        ContactPerson = customer.ContactPerson
+                    };
+                    customers.Add(customerView);
+                }
+            }
+            view.Customers = customers;
+
             return view;
         }
         catch (MDBException ex)

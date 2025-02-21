@@ -10,4 +10,5 @@ public class Product
     public int QuantityPerPack { get; set; }
     public DateTime ExpireDate { get; set; }
     public DateTime ManufactureDate { get; set; }
+    public IList<OrderItem> OrderItems { get; set; }
 }

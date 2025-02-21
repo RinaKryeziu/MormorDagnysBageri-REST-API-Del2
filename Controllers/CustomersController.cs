@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using mormordagnysbageri_del1_api.Interfaces;
+using mormordagnysbageri_del1_api.ViewModels;
 using mormordagnysbageri_del1_api.ViewModels.Customer;
 
 namespace mormordagnysbageri_del1_api.Controllers;
@@ -19,7 +20,7 @@ public class CustomersController(IUnitOfWork unitOfWork) : ControllerBase
         }
         catch (Exception ex)
         {
-            
+
             return NotFound($"Tyvärr hittade vi inget {ex.Message}");
         }
     }
@@ -34,10 +35,10 @@ public class CustomersController(IUnitOfWork unitOfWork) : ControllerBase
         }
         catch (Exception ex)
         {
-            
-            return NotFound(new { success = false, message = ex.Message});
+
+            return NotFound(new { success = false, message = ex.Message });
         }
-       
+
     }
 
     [HttpPost()]
@@ -47,11 +48,12 @@ public class CustomersController(IUnitOfWork unitOfWork) : ControllerBase
         {
             if (await _unitOfWork.CustomerRepository.Add(model))
             {
-                if(await _unitOfWork.Complete())
+                if (await _unitOfWork.Complete())
                 {
                     return StatusCode(201);
                 }
-                else{
+                else
+                {
                     return StatusCode(500);
                 }
             }
@@ -62,12 +64,37 @@ public class CustomersController(IUnitOfWork unitOfWork) : ControllerBase
         }
         catch (Exception ex)
         {
-            
+
             return BadRequest(ex.Message);
         }
     }
 
-
-
+    [HttpPatch("{id}/contactPerson")]
+    public async Task<IActionResult> UpdateCustomerContactPerson(int id, CustomerBaseViewModel model)
+    {
+        try
+        {
+            if (await _unitOfWork.CustomerRepository.Update(id, model))
+            {
+                if (_unitOfWork.HasChanges())
+                {
+                    await _unitOfWork.Complete();
+                    return NoContent();
+                }
+                else
+                {
+                    return StatusCode(500);
+                }
+            }
+            else
+            {
+                return StatusCode(500);
+            }
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 
 }

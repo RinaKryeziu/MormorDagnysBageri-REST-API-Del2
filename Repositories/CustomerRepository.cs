@@ -110,6 +110,7 @@ public class CustomerRepository(DataContext context, IAddressRepository repo) : 
                 var orderView = new SalesOrderViewModel
                 {
                     OrderId = order.OrderId,
+                    CustomerName = customer.Name,
                     OrderDate = order.OrderDate
                 };
 
@@ -174,6 +175,24 @@ public class CustomerRepository(DataContext context, IAddressRepository repo) : 
         {
 
             throw new Exception($"Ett fel uppstod {ex.Message}");
+        }
+    }
+
+    public async Task<bool> Update(int id, CustomerBaseViewModel model)
+    {
+        try
+        {
+            var result = await _context.Customers
+            .Where(c => c.Id == id)
+            .SingleOrDefaultAsync();
+
+            result.ContactPerson = model.ContactPerson;
+            return true;
+
+        }
+        catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
         }
     }
 }
